@@ -10,44 +10,50 @@ If you find a bug, please submit an issue.
 require_once("config.php");
 
 class Database {
+    public $connection;
 
-	public $connection;
-	public function __construct() {
-		$this->open_db_connection();
-	}
+    public function __construct() {
+        $this->openDbConnection();
+    }
 
-	public function open_db_connection() {
-		$this->connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-		if ($this->connection->connect_errno) {
-			die("Database connection failed!" . $this->connection->connect_error);
-		}
-	}
+    public function openDbConnection() {
+        $this->connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+        if ($this->connection->connect_errno) {
+            die("Database connection failed: " . $this->connection->connect_error);
+        }
+    }
 
-	public function query($sql) {
-		$result = $this->connection->query($sql);
-		$this->confirm_query($result);
-		return $result;
-	}
+    public function query($sql) {
+        $result = $this->connection->query($sql);
+        $this->confirmQuery($result);
+        return $result;
+    }
 
-	private function confirm_query($result) {
-		if(!isset($result)) {
-			die("Database query failed!" . $this->connection->error);
-		}
-	}
+    public function prepare($sql) {
+        $stmt = $this->connection->prepare($sql);
+        if (!$stmt) {
+            die("Database prepare failed: " . $this->connection->error);
+        }
+        return $stmt;
+    }
 
-	public function escape_string($string) {
-		$escaped_string = $this->connection->real_escape_string($string);
-		return $escaped_string;
-	}
+    private function confirmQuery($result) {
+        if (!$result) {
+            die("Database query failed: " . $this->connection->error);
+        }
+    }
 
-	public function insert_id() {
-		return $this->connection->insert_id;
-	}
+    public function real_escape_string($string) {
+        return $this->connection->real_escape_string($string);
+    }
 
+    public function insertId() {
+        return $this->connection->insert_id;
+    }
 }
 
 $database = new Database();
-$database->open_db_connection();
+$database->openDbConnection();
 
 
 function getAllItemsForUpdate() {
@@ -62,8 +68,8 @@ function getAllItemsForUpdate() {
 	echo '<select name="selectId">';
 
 	while ($row = $result->fetch_assoc()) {
-		$id = $row['id'];
-		$item_name = $row['item_name'];
+		$id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
+		$item_name = htmlspecialchars($row['item_name'], ENT_QUOTES, 'UTF-8');
 	 	echo "<option value='$id'>$item_name</option>";
 	}
 
@@ -81,8 +87,8 @@ function getAllItemsForDelete() {
 	echo '<select name="item_name" id="item_name">';
 
 	while ($row = $result->fetch_assoc()) {
-		$id = $row['id'];
-		$item_name = $row['item_name'];
+		$id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
+		$item_name = htmlspecialchars($row['item_name'], ENT_QUOTES, 'UTF-8');
 	 	echo "<option value='$id'>$item_name</option>";
 	}
 
@@ -91,1194 +97,1133 @@ function getAllItemsForDelete() {
 }
 
 function createItem() {
+    global $database;
 
-	global $database;
+    // Escape user inputs for security
+    $item_name = $database->real_escape_string($_POST['item_name']);
+    $item_tagline = $database->real_escape_string($_POST['item_tagline']);
 
-	$item_name = $database->escape_string($_POST['item_name']);
-	$item_tagline = $database->escape_string($_POST['item_tagline']);
+    // Insert item into the items table
+    $query = "INSERT INTO items (item_name, tagline) VALUES ('$item_name', '$item_tagline')";
+    $result = $database->query($query);
+    $item_id = $database->insertId();
 
-	$query = "INSERT INTO items (item_name, tagline) VALUES ('$item_name', '$item_tagline')";
-	$result = $database->query($query);
-	$item_id = $database->insert_id();
+    // Fetch all field types
+    $query_all_field_types = "SELECT id FROM field_types";
+    $result_all_field_types = $database->query($query_all_field_types);
 
-	$query_all_field_types = "SELECT id FROM field_types";
-	$result_all_field_types = $database->query($query_all_field_types);
+    // Insert item fields for each field type
+    while ($row = $result_all_field_types->fetch_assoc()) {
+        $field_type_id = $row['id'];
+        $query_insert_item_fields = "INSERT INTO item_fields (item_id, field_type, field_text) VALUES ($item_id, $field_type_id, '')";
+        $result_insert_item_fields = $database->query($query_insert_item_fields);
+    }
 
-	while ($row = $result_all_field_types->fetch_assoc()) {
-		$field_type_id = $row['id'];
-		$query_insert_item_fields = "INSERT INTO item_fields (item_id,field_type,field_text) VALUES ($item_id,$field_type_id,'')";
-		$result_insert_item_fields = $database->query($query_insert_item_fields);
-
-	}
-
-    if (isset($result_insert_item_fields)) {
-    	$statusMessage = "Item created successfully!";
+    // Check if the last insert was successful
+    if ($result_insert_item_fields) {
+        $statusMessage = "Item created successfully!";
     } else {
-    	$statusMessage = "Error: Item not created!";
+        $statusMessage = "Error: Item not created!";
     }
 
     return $statusMessage;
-
 }
 
 function deleteItem() {
+    global $database;
 
-	global $database;
+    // Escape user input for security
+    $id = $database->real_escape_string($_POST['item_name']);
 
-	$id = $database->escape_string($_POST['item_name']);
+    if (filter_has_var(INPUT_POST, 'deleteme')) {
+        // Delete item from items table
+        $query = "DELETE FROM items WHERE id='$id'";
+        $result = $database->query($query);
 
-	if (filter_has_var(INPUT_POST, 'deleteme')) {
+        // Delete related item fields
+        $query_delete_item_fields = "DELETE FROM item_fields WHERE item_id=$id";
+        $result_delete_item_fields = $database->query($query_delete_item_fields);
 
-		$query = "DELETE FROM items WHERE id='$id'";
-		$result = $database->query($query);
+        // Delete related capabilities fields
+        $query_delete_capabilities_fields = "DELETE FROM capabilities_fields WHERE item_id=$id";
+        $result_delete_capabilities_fields = $database->query($query_delete_capabilities_fields);
+    }
 
-		$query_delete_item_fields = "DELETE FROM item_fields WHERE item_id=$id";
-		$result_delete_item_fields = $database->query($query_delete_item_fields);
-
-		$query_delete_capabilities_fields = "DELETE FROM capabilities_fields WHERE item_id=$id";
-		$result_delete_capabilities_fields = $database->query($query_delete_capabilities_fields);
-
-	}
-
+    // Check if the last delete operation was successful
     if (isset($result_delete_capabilities_fields)) {
-    	$statusMessage = "Item deleted successfully!";
+        $statusMessage = "Item deleted successfully!";
     } else {
-    	$statusMessage = "Error: Item not deleted!";
+        $statusMessage = "Error: Item not deleted!";
     }
 
     return $statusMessage;
-
 }
 
 function getAllFieldTypesForUpdate() {
+    global $database;
 
-	global $database;
+    $query = "SELECT * FROM field_types ORDER BY display_order ASC";
+    $result = $database->query($query);
 
-	$query = "SELECT * FROM field_types ORDER BY display_order ASC";
-	$result = $database->query($query);
+    echo '<p>&nbsp;</p>';
+    echo '<form action="field_types_update.php" method="POST">';
+    echo '<select name="selectId">';
 
-	echo '<p>&nbsp;</p>';
-	echo '<form action="field_types_update.php" method="POST">';
-	echo '<select name="selectId">';	
+    while ($row = $result->fetch_assoc()) {
+        $id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
+        $type = htmlspecialchars($row['type'], ENT_QUOTES, 'UTF-8');
+        echo "<option value='$id'>$type</option>";
+    }
 
-	while ($row = $result->fetch_assoc()) {
-		$id = $row['id'];
-		$type = $row['type'];
-	 	echo "<option value='$id'>$type</option>";
-	}
-
-	echo '</select><br><input type="submit" value="Select"></form>';
-
+    echo '</select><br><input type="submit" value="Select"></form>';
 }
 
 function getAllFieldTypesForDelete() {
+    global $database;
 
-	global $database;
+    $query = "SELECT * FROM field_types";
+    $result = $database->query($query);
 
-	$query = "SELECT * FROM field_types";
-	$result = $database->query($query);
+    echo '<select name="type" id="type">';
 
-	echo '<select name="type" id="type">';
+    while ($row = $result->fetch_assoc()) {
+        $id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
+        $type = htmlspecialchars($row['type'], ENT_QUOTES, 'UTF-8');
+        echo "<option value='$id'>$type</option>";
+    }
 
-	while ($row = $result->fetch_assoc()) {
-		$id = $row['id'];
-		$type = $row['type'];
-	 	echo "<option value='$id'>$type</option>";
-	}
-
-	echo '</select>';
-
+    echo '</select>';
 }
 
 function getSingleItemForUpdate($selectId) {
+    global $database;
 
-	global $database;
+    echo '<form action="item_update.php" method="POST">';
+    echo '<div class="form-group">';
 
-	echo '<form action="item_update.php" method="POST">';
-	echo '<div class="form-group">';
+    // Fetch and display item tagline
+    $query_tagline = "SELECT tagline FROM items WHERE id = $selectId";
+    $result_tagline = $database->query($query_tagline);
 
-	$query_tagline = "SELECT tagline FROM items WHERE id = $selectId";
-	$result_tagline = $database->query($query_tagline);
+    while ($row0 = $result_tagline->fetch_assoc()) {
+        $item_tagline = htmlspecialchars($row0['tagline'], ENT_QUOTES, 'UTF-8');
+        echo "<h1>Subtitle / Tagline</h1>";
+        echo '<textarea id="' . $selectId . '" name="' . $selectId . '" rows="1" cols="1" class="form-control">';
+        echo $item_tagline;
+        echo '</textarea>';
+    }
 
-	while ($row0 = $result_tagline->fetch_assoc()) {
-		$item_tagline = $row0['tagline'];
-		echo "<h1>Subtitle / Tagline</h1>";
-		echo '<textarea id="'.$selectId.'" name="'.$selectId.'" rows="1" cols="1" class="form-control">';
-		echo $item_tagline;
-		echo '</textarea>';
+    // Fetch and display item fields
+    $query = "SELECT * FROM item_fields WHERE item_id = $selectId";
+    $result = $database->query($query);
 
-	}
+    while ($row = $result->fetch_assoc()) {
+        $id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
+        $field_type = htmlspecialchars($row['field_type'], ENT_QUOTES, 'UTF-8');
+        $field_text = htmlspecialchars($row['field_text'], ENT_QUOTES, 'UTF-8');
 
-	$query = "SELECT * FROM item_fields WHERE item_id = $selectId";	
-	$result = $database->query($query);
+        $query_field_type = "SELECT * FROM field_types WHERE id = $field_type";
+        $result2 = $database->query($query_field_type);
 
-	while ($row = $result->fetch_assoc()) {
-		$id = $row['id'];
-		$item_id = $row['item_id'];
-		$field_type = $row['field_type'];
-		$field_text = $row['field_text'];	 	
+        while ($row2 = $result2->fetch_assoc()) {
+            $field_type2 = htmlspecialchars($row2['type'], ENT_QUOTES, 'UTF-8');
+            echo "<h1>$field_type2</h1>";
+            echo '<textarea id="' . $id . '" name="' . $id . '" rows="3" cols="1" class="tinymce">';
+            echo $field_text;
+            echo '</textarea>';
+        }
+    }
 
-	 		$query_field_type = "SELECT * FROM field_types WHERE id = $field_type";
-	 		$result2 = $database->query($query_field_type);
+    // Fetch and display sections with capabilities
+    $query_sections = "SELECT id, name, description FROM sections ORDER BY display_order";
+    $result_sections = $database->query($query_sections);
 
-	 		while ($row2 = $result2->fetch_assoc()) {
-	 			$field_type2 = $row2['type'];
-	 			echo "<h1>$field_type2</h1>";	 			
-	 			echo '<textarea id="'.$id.'" name="'.$id.'" rows="3" cols="1" class="tinymce">';
-	 			echo $field_text;
-	 			echo '</textarea>';
-	 		} 	
+    while ($row1 = $result_sections->fetch_assoc()) {
+        $section_id = htmlspecialchars($row1['id'], ENT_QUOTES, 'UTF-8');
+        $section_name = htmlspecialchars($row1['name'], ENT_QUOTES, 'UTF-8');
+        $section_description = htmlspecialchars($row1['description'], ENT_QUOTES, 'UTF-8');
 
-	}
+        echo "<br><span style='font-size: 14px; font-family: Arial;'><b>$section_name</b></span><br>";
 
+        $query_capabilities = "SELECT * FROM capabilities WHERE nav_menu_section = $section_id";
+        $result_capabilities = $database->query($query_capabilities);
 
-	$query_sections = "SELECT id,name,description FROM sections ORDER BY display_order";
-	$result_sections = $database->query($query_sections);
+        while ($row = $result_capabilities->fetch_assoc()) {
+            $id_checked = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
+            $capability_checked = htmlspecialchars($row['capability'], ENT_QUOTES, 'UTF-8');
 
-	while ($row1 = $result_sections->fetch_assoc()) {
-		$section_id = $row1['id'];
-		$section_name = $row1['name'];
-		$section_description = $row1['description'];
+            $query_checked = "SELECT id FROM capabilities_fields WHERE item_id = '$selectId' AND capability_id = '$id_checked'";
+            $result_checked = $database->query($query_checked);
 
-		echo "<br><span style='font-size: 14px; font-family: Arial;'><b>$section_name</b></span><br>";
+            $checked_row = $result_checked->fetch_row();
 
-		$query_capabilities = "SELECT * FROM capabilities WHERE nav_menu_section=$section_id";
-		$result_capabilities = $database->query($query_capabilities);		
+            if (isset($checked_row)) {
+                echo "<input type='checkbox' name='capabilities[]' value='$id_checked' checked>";
+                echo "&nbsp;<label for='capabilities'>$capability_checked</label><br>";
+            } else {
+                echo "<input type='checkbox' name='capabilities[]' value='$id_checked'>";
+                echo "&nbsp;<label for='capabilities'>$capability_checked</label><br>";
+            }
+        }
+    }
 
-		while ($row = $result_capabilities->fetch_assoc()) {
-			$id_checked = $row['id'];
-			$capability_checked = $row['capability'];
-
-			$query_checked = "SELECT id FROM capabilities_fields WHERE item_id='$selectId' AND capability_id='$id_checked'";
-			$result_checked = $database->query($query_checked);
-
-			$checked_row = $result_checked->fetch_row();
-
-			if (isset($checked_row)) {
-
-				echo "<input type='checkbox' name='capabilities[]' value='$id_checked' checked>";
-				echo "&nbsp;<label for='capabilities'>$capability_checked</label><br>";
-
-			} else {
-
-				echo "<input type='checkbox' name='capabilities[]' value='$id_checked'>";
-				echo "&nbsp;<label for='capabilities'>$capability_checked</label><br>";
-
-			}
-
-		}
-
-	}
-	
-	echo '</div><br>';
-	echo '<input type="hidden" id="saveId" name="saveId" value="'.$item_id.'">';
-	echo '<input class="btn btn-primary" type="submit" name="submit" value="Save">';
-	echo '</form>';
-
+    echo '</div><br>';
+    echo '<input type="hidden" id="saveId" name="saveId" value="' . htmlspecialchars($selectId, ENT_QUOTES, 'UTF-8') . '">';
+    echo '<input class="btn btn-primary" type="submit" name="submit" value="Save">';
+    echo '</form>';
 }
 
 function getSingleFieldTypeForUpdate($editId) {
+    global $database;
 
-	global $database;
-	
-	$query = "SELECT * FROM field_types WHERE id = $editId ORDER BY display_order ASC";
-	$result = $database->query($query);
+    $query = "SELECT * FROM field_types WHERE id = $editId ORDER BY display_order ASC";
+    $result = $database->query($query);
 
-	echo '<form action="field_types_update.php" method="POST">';
-	echo '<div class="form-group">';
+    echo '<form action="field_types_update.php" method="POST">';
+    echo '<div class="form-group">';
 
-	while ($row = $result->fetch_assoc()) {
-		$id = $row['id'];
-		$type = $row['type'];
+    while ($row = $result->fetch_assoc()) {
+        $id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
+        $type = htmlspecialchars($row['type'], ENT_QUOTES, 'UTF-8');
 
-		echo "<h1>$type</h1>";		
-		echo '<input type="text" id="type" name="type" value="'.$type.'" class="form-control">';
+        echo "<h1>$type</h1>";
+        echo '<input type="text" id="type" name="type" value="' . $type . '" class="form-control">';
+    }
 
-	}
-	
-	echo '</div>';
-	echo '<input type="hidden" id="saveId" name="saveId" value="'.$id.'">';
-	echo '<input class="btn btn-primary" type="submit" name="submit" value="Save">';
-	echo '</form>';
-
+    echo '</div>';
+    echo '<input type="hidden" id="saveId" name="saveId" value="' . htmlspecialchars($id, ENT_QUOTES, 'UTF-8') . '">';
+    echo '<input class="btn btn-primary" type="submit" name="submit" value="Save">';
+    echo '</form>';
 }
 
 function createFieldTypes() {
+    global $database;
 
-	global $database;
+    // Escape user input for security
+    $field_type = $database->real_escape_string($_POST['field_type']);
 
-	$field_type = $database->escape_string($_POST['field_type']);
+    // Insert new field type into field_types table
+    $query = "INSERT INTO field_types (type, display_order) VALUES ('$field_type', 1)";
+    $result = $database->query($query);
+    $field_type_id = $database->insertId();
 
-	$query = "INSERT INTO field_types (type,display_order) VALUES ('$field_type',1)";
-	$result = $database->query($query);
-	$field_type = $database->insert_id();
+    // Fetch all items
+    $query_all_items = "SELECT id FROM items";
+    $result_all_items = $database->query($query_all_items);
 
-	$query_all_items = "SELECT id FROM items";
-	$result_all_items = $database->query($query_all_items);
+    // Insert new field type for each item
+    while ($row = $result_all_items->fetch_assoc()) {
+        $item_id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
+        $insert_all_query = "INSERT INTO item_fields (item_id, field_type, field_text) VALUES ($item_id, $field_type_id, '')";
+        $result_all_query = $database->query($insert_all_query);
+    }
 
-	while ($row = $result_all_items->fetch_assoc()) {
-		$item_id = $row['id'];
-
-		$insert_all_query = "INSERT INTO item_fields (item_id,field_type,field_text) VALUES ($item_id,$field_type,'')";
-		$result_all_query = $database->query($insert_all_query);
-
-	}
-
-    if (isset($result_all_query)) {
-    	$statusMessage = "Field type created successfully!";
+    // Check if the last insert operation was successful
+    if ($result_all_query) {
+        $statusMessage = "Field type created successfully!";
     } else {
-    	$statusMessage = "Error: Field type not created!";
+        $statusMessage = "Error: Field type not created!";
     }
 
     return $statusMessage;
-
 }
 
 function deleteFieldType() {
+    global $database;
 
-	global $database;
+    // Escape user input for security
+    $id = $database->real_escape_string($_POST['type']);
 
-	$id = $database->escape_string($_POST['type']);
+    if (filter_has_var(INPUT_POST, 'deleteme')) {
+        // Delete field type from field_types table
+        $query = "DELETE FROM field_types WHERE id='$id'";
+        $result = $database->query($query);
 
-	if (filter_has_var(INPUT_POST, 'deleteme')) {
+        // Delete related item fields
+        $query_delete_item_fields = "DELETE FROM item_fields WHERE field_type=$id";
+        $result_delete_item_fields = $database->query($query_delete_item_fields);
+    }
 
-		$query = "DELETE FROM field_types WHERE id='$id'";
-		$result = $database->query($query);
-
-		$query_delete_item_fields = "DELETE FROM item_fields WHERE field_type=$id";
-		$result_delete_item_fields = $database->query($query_delete_item_fields);
-
-	}
-
+    // Check if the last delete operation was successful
     if (isset($result_delete_item_fields)) {
-    	$statusMessage = "Field type deleted successfully!";
+        $statusMessage = "Field type deleted successfully!";
     } else {
-    	$statusMessage = "Error: Field type not deleted!";
+        $statusMessage = "Error: Field type not deleted!";
     }
 
     return $statusMessage;
-
 }
 
 function updateSingleItem($saveId) {
+    global $database;
 
-	global $database;
+    foreach ($_POST as $key => $value) {
+        if (!is_array($value) && $value != "Save" && $key != "saveId") {
+            $value = $database->real_escape_string($value);
 
-	foreach ($_POST as $key => $value) {		
+            // Update item fields
+            $query = "UPDATE item_fields SET field_text='$value' WHERE id='$key'";
+            $result = $database->query($query);
 
-		if ((!is_array($value)) && $value != "Save" && $key != "saveId") {
-			
-			$value = $database->escape_string($value);
+            // Update item tagline
+            $query_tagline = "UPDATE items SET tagline='$value' WHERE id='$key'";
+            $result_tagline = $database->query($query_tagline);
+        }
+    }
 
-			$query = "UPDATE item_fields SET field_text='$value' WHERE id='$key'";
-			$result = $database->query($query);
+    // Clear existing capabilities
+    $query_clear_capabilities = "DELETE FROM capabilities_fields WHERE item_id='$saveId'";
+    $result_clear_capabilities = $database->query($query_clear_capabilities);
 
-			$query_tagline = "UPDATE items SET tagline='$value' WHERE id='$key'";
-			$result_tagline = $database->query($query_tagline);
+    // Insert new capabilities
+    foreach ($_POST['capabilities'] as $checkedValue) {
+        $query_insert_capabilities_fields = "INSERT INTO capabilities_fields (item_id, capability_id) VALUES ('$saveId', '$checkedValue')";
+        $result_insert_capabilities_fields = $database->query($query_insert_capabilities_fields);
+    }
 
-		}
-
-	}
-
-	$query_clear_capabilities = "DELETE FROM capabilities_fields WHERE item_id='$saveId'";
-	$result_clear_capabilities = $database->query($query_clear_capabilities);
-
-	foreach ($_POST['capabilities'] as $checkedKey => $checkedValue) {
-
-		$query_insert_capabilities_fields = "INSERT INTO capabilities_fields (item_id,capability_id) VALUES ('$saveId','$checkedValue')";
-		$result_insert_capabilities_fields = $database->query($query_insert_capabilities_fields);
-
-	}
-
-    if (isset($result_insert_capabilities_fields)) {
-    	$statusMessage = "Item updated successfully! Just a moment...";
-    	$statusMessage .= "<meta http-equiv='refresh' content='3; url=item_update.php' />";
+    // Check if the last insert operation was successful
+    if ($result_insert_capabilities_fields) {
+        $statusMessage = "Item updated successfully! Just a moment...";
+        $statusMessage .= "<meta http-equiv='refresh' content='3; url=item_update.php' />";
     } else {
-    	$statusMessage = "Error: Item not updated!";
+        $statusMessage = "Error: Item not updated!";
     }
 
     return $statusMessage;
-
 }
 
 function updateSingleFieldType($saveId) {
+    global $database;
 
-	global $database;
+    // Escape user input for security
+    $post_type = $database->real_escape_string($_POST['type']);
 
-	$post_type = $database->escape_string($_POST['type']);
+    // Update field type
+    $query = "UPDATE field_types SET type='$post_type' WHERE id=$saveId";
+    $result = $database->query($query);
 
-	$query = "UPDATE field_types SET type='".$post_type."' WHERE id=".$saveId."";
-	$result = $database->query($query);
-
-    if (isset($result)) {
-    	$statusMessage = "Field type updated successfully! Just a moment...";
-    	$statusMessage .= "<meta http-equiv='refresh' content='3; url=field_types_update.php' />";
+    // Check if the update operation was successful
+    if ($result) {
+        $statusMessage = "Field type updated successfully! Just a moment...";
+        $statusMessage .= "<meta http-equiv='refresh' content='3; url=field_types_update.php' />";
     } else {
-    	$statusMessage = "Error: Field type not updated!";
+        $statusMessage = "Error: Field type not updated!";
     }
 
     return $statusMessage;
-
 }
 
 function createUser() {
+    global $database;
 
-	global $database;
+    // Escape user inputs for security
+    $username = $database->real_escape_string($_POST['username']);
+    $password = $database->real_escape_string($_POST['password']);
 
-	$username = $database->escape_string($_POST['username']);
-	$password = $database->escape_string($_POST['password']);
+    // Hash the password using a salt
+    $password = crypt($password, SALT); // get SALT from config.php
 
-	$password = crypt($password, SALT); // get SALT from config.php
+    // Insert new user into users table
+    $query = "INSERT INTO users (username, password, isadmin) VALUES ('$username', '$password', 1)";
+    $result = $database->query($query);
 
-	$query = "INSERT INTO users (username,password,isadmin) VALUES ('$username','$password',1)";
-	$result = $database->query($query);
-
+    // Check if the insert operation was successful
+    if ($result) {
+        return "User created successfully!";
+    } else {
+        return "Error: User not created!";
+    }
 }
 
 function deleteUser() {
+    global $database;
 
-	global $database;
+    // Escape user input for security
+    $id = $database->real_escape_string($_POST['username']);
 
-	$id = $database->escape_string($_POST['username']);
+    if (filter_has_var(INPUT_POST, 'deleteme')) {
+        // Delete user from users table
+        $query = "DELETE FROM users WHERE id='$id'";
+        $result = $database->query($query);
 
-	if (filter_has_var(INPUT_POST, 'deleteme')) {
-
-		$query = "DELETE FROM users WHERE id='$id'";
-		$result = $database->query($query);
-
-	}
-
+        // Check if the delete operation was successful
+        if ($result) {
+            return "User deleted successfully!";
+        } else {
+            return "Error: User not deleted!";
+        }
+    }
 }
 
 function updateUser() {
+    global $database;
 
-	global $database;
+    // Escape user inputs for security
+    $id = $database->real_escape_string($_POST['username']);
+    $password = $database->real_escape_string($_POST['password']);
 
-	$id = $database->escape_string($_POST['username']);
-	$password = $database->escape_string($_POST['password']);
+    // Hash the password using a salt
+    $password = crypt($password, SALT); // get SALT from config.php
 
-	$password = crypt($password, SALT); // get SALT from config.php
-	
-	$query = "UPDATE users SET password='$password' WHERE id='$id'";
-	$result = $database->query($query);
+    // Update user password
+    $query = "UPDATE users SET password='$password' WHERE id='$id'";
+    $result = $database->query($query);
 
+    // Check if the update operation was successful
+    if ($result) {
+        return "User updated successfully!";
+    } else {
+        return "Error: User not updated!";
+    }
 }
 
 function userLogin() {
+    global $database;
 
-	global $database;
+    // Escape user inputs for security
+    $username = $database->real_escape_string($_POST['username']);
+    $password = $database->real_escape_string($_POST['password']);
 
-	$username = $database->escape_string($_POST['username']);
-	$password = $database->escape_string($_POST['password']);
-	
-	$password = crypt($password, SALT); // get SALT from config.php
+    // Hash the password using a salt
+    $password = crypt($password, SALT); // get SALT from config.php
 
-	$query = "SELECT id FROM users WHERE username='$username' AND password='$password'";
-	$result = $database->query($query);
+    // Query to check user credentials
+    $query = "SELECT id FROM users WHERE username='$username' AND password='$password'";
+    $result = $database->query($query);
 
-	if ($result->num_rows > 0) {
-		$_SESSION['user'] = $username;
-		header("location:index.php");
-	} else {
-		echo "Login failed";
-	}
-
+    // Check if user exists
+    if ($result->num_rows > 0) {
+        $_SESSION['user'] = $username;
+        header("Location: index.php");
+        exit();
+    } else {
+        echo "Login failed";
+    }
 }
 
 function getAllUsersForUpdate() {
+    global $database;
 
-	global $database;
+    $query = "SELECT * FROM users";
+    $result = $database->query($query);
 
-	$query = "SELECT * FROM users";
-	$result = $database->query($query);
+    echo '<select name="username" id="username">';
 
-	echo '<select name="username" id="username">';
+    while ($row = $result->fetch_assoc()) {
+        $id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
+        $username = htmlspecialchars($row['username'], ENT_QUOTES, 'UTF-8');
+        echo "<option value='$id'>$username</option>";
+    }
 
-	while ($row = $result->fetch_assoc()) {
-		$id = $row['id'];
-		$username = $row['username'];
-	 	echo "<option value='$id'>$username</li>";
-	}
-
-	echo '</select>&nbsp;';
-
+    echo '</select>&nbsp;';
 }
 
 function createCapabilities() {
+    global $database;
 
-	global $database;
+    // Escape user input for security
+    $capability = $database->real_escape_string($_POST['capability']);
 
-	$capability = $database->escape_string($_POST['capability']);
+    $section = null;
+    if (isset($_POST['section'])) {
+        $section = $database->real_escape_string($_POST['section']);
+    }
 
-	if ($_POST['section']) {
-		$section = $database->escape_string($_POST['section']);
-	}
+    // Insert new capability into capabilities table
+    $query = "INSERT INTO capabilities (capability, nav_menu_section) VALUES ('$capability', '$section')";
+    $result = $database->query($query);
 
-	$query = "INSERT INTO capabilities (capability,nav_menu_section) VALUES ('$capability','$section')";
-	$result = $database->query($query);
-
-    if (isset($result)) {
-    	$statusMessage = "Capability created successfully!";
+    // Check if the insert operation was successful
+    if ($result) {
+        $statusMessage = "Capability created successfully!";
     } else {
-    	$statusMessage = "Error: Capability not created!";
+        $statusMessage = "Error: Capability not created!";
     }
 
     return $statusMessage;
-
 }
 
 function getSingleCapabilityForUpdate($editId) {
+    global $database;
 
-	global $database;
+    $query = "SELECT * FROM capabilities WHERE id = $editId";
+    $result = $database->query($query);
 
-	$query = "SELECT * FROM capabilities WHERE id = $editId";
-	$result = $database->query($query);
+    echo '<form action="capabilities_update.php" method="POST">';
+    echo '<div class="form-group">';
 
-	echo '<form action="capabilities_update.php" method="POST">';
-	echo '<div class="form-group">';
+    while ($row = $result->fetch_assoc()) {
+        $id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
+        $capability = htmlspecialchars($row['capability'], ENT_QUOTES, 'UTF-8');
 
-	while ($row = $result->fetch_assoc()) {
-		$id = $row['id'];
-		$capability = $row['capability'];
+        echo "<h1>$capability</h1>";
+        echo '<textarea id="capability" name="capability" rows="3" cols="1" class="form-control">';
+        echo $capability;
+        echo '</textarea>';
+    }
 
-		echo "<h1>$capability</h1>";
-		echo '<textarea id="capability" name="capability" rows="3" cols="1" class="form-control">';
-		echo $capability;
-		echo '</textarea>';
-
-	}
-
-	echo '</div>';
-	echo '<input type="hidden" id="saveId" name="saveId" value="'.$id.'">';
-	echo '<input class="btn btn-primary" type="submit" name="submit" value="Save">';
-	echo '</form>';
-
+    echo '</div>';
+    echo '<input type="hidden" id="saveId" name="saveId" value="' . htmlspecialchars($id, ENT_QUOTES, 'UTF-8') . '">';
+    echo '<input class="btn btn-primary" type="submit" name="submit" value="Save">';
+    echo '</form>';
 }
 
 function updateSingleCapability($saveId) {
+    global $database;
 
-	global $database;
+    // Escape user input for security
+    $capability = $database->real_escape_string($_POST['capability']);
 
-	$capability = $database->escape_string($_POST['capability']);
+    // Update capability
+    $query = "UPDATE capabilities SET capability='$capability' WHERE id='$saveId'";
+    $result = $database->query($query);
 
-	$query = "UPDATE capabilities SET capability='$capability' WHERE id='$saveId'";
-	$result = $database->query($query);
-
-    if (isset($result)) {
-    	$statusMessage = "Capability updated successfully! Just a moment...";
-    	$statusMessage .= "<meta http-equiv='refresh' content='3; url=capabilities_update.php' />";
+    // Check if the update operation was successful
+    if ($result) {
+        $statusMessage = "Capability updated successfully! Just a moment...";
+        $statusMessage .= "<meta http-equiv='refresh' content='3; url=capabilities_update.php' />";
     } else {
-    	$statusMessage = "Error: Capability not updated!";
+        $statusMessage = "Error: Capability not updated!";
     }
 
     return $statusMessage;
-
 }
 
 function getAllCapabilitiesForUpdate() {
+    global $database;
 
-	global $database;
+    $query = "SELECT * FROM capabilities";
+    $result = $database->query($query);
 
-	$query = "SELECT * FROM capabilities";
-	$result = $database->query($query);
+    echo '<p>&nbsp;</p>';
+    echo '<form action="capabilities_update.php" method="POST">';
+    echo '<select name="selectId">';
 
-	echo '<p>&nbsp;</p>';
-	echo '<form action="capabilities_update.php" method="POST">';
-	echo '<select name="selectId">';
+    while ($row = $result->fetch_assoc()) {
+        $id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
+        $capability = htmlspecialchars($row['capability'], ENT_QUOTES, 'UTF-8');
+        echo "<option value='$id'>$capability</option>";
+    }
 
-	while ($row = $result->fetch_assoc()) {
-		$id = $row['id'];
-		$capability = $row['capability'];
-	 	echo "<option value='$id'>$capability</option>";
-	}
-
-	echo '</select><br><input type="submit" value="Select"></form>';
-
+    echo '</select><br><input type="submit" value="Select"></form>';
 }
 
 function getAllCapabilitiesForDelete() {
+    global $database;
 
-	global $database;
+    $query = "SELECT * FROM capabilities";
+    $result = $database->query($query);
 
-	$query = "SELECT * FROM capabilities";
-	$result = $database->query($query);
+    echo '<select name="capability" id="capability">';
 
-	echo '<select name="capability" id="capability">';
+    while ($row = $result->fetch_assoc()) {
+        $id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
+        $capability = htmlspecialchars($row['capability'], ENT_QUOTES, 'UTF-8');
+        echo "<option value='$id'>$capability</option>";
+    }
 
-	while ($row = $result->fetch_assoc()) {
-		$id = $row['id'];
-		$capability = $row['capability'];
-	 	echo "<option value='$id'>$capability</option>";
-	}
-
-	echo '</select>';
-
+    echo '</select>';
 }
 
 function deleteCapability() {
+    global $database;
 
-	global $database;
+    // Escape user input for security
+    $id = $database->real_escape_string($_POST['capability']);
 
-	$id = $database->escape_string($_POST['capability']);
+    if (filter_has_var(INPUT_POST, 'deleteme')) {
+        // Delete capability from capabilities table
+        $query = "DELETE FROM capabilities WHERE id='$id'";
+        $result = $database->query($query);
+    }
 
-	if (filter_has_var(INPUT_POST, 'deleteme')) {
-
-		$query = "DELETE FROM capabilities WHERE id='$id'";
-		$result = $database->query($query);
-
-	}
-
+    // Check if the delete operation was successful
     if (isset($result)) {
-    	$statusMessage = "Capability deleted successfully!";
+        $statusMessage = "Capability deleted successfully!";
     } else {
-    	$statusMessage = "Error: Capability not deleted!";
+        $statusMessage = "Error: Capability not deleted!";
     }
 
     return $statusMessage;
-
 }
 
 function createSections() {
+    global $database;
 
-	global $database;
+    // Escape user inputs for security
+    $section = $database->real_escape_string($_POST['section']);
+    $description = $database->real_escape_string($_POST['description']);
 
-	$section = $database->escape_string($_POST['section']);
-	$description = $database->escape_string($_POST['description']);
+    // Get the maximum display order
+    $query_max = "SELECT MAX(display_order) AS max_display_order FROM sections";
+    $result_max = $database->query($query_max);
 
-	$query_max = "SELECT max(display_order) as max_display_order FROM sections";
-	$result_max = $database->query($query_max);
+    $row = $result_max->fetch_array();
+    $max_display_order = $row['max_display_order'] + 1;
 
-	$row = $result_max->fetch_array();
-	$max_display_order = $row['max_display_order'];
-	$max_display_order++;
+    // Insert new section into sections table
+    $query = "INSERT INTO sections (name, description, display_order) VALUES ('$section', '$description', '$max_display_order')";
+    $result = $database->query($query);
 
-	$query = "INSERT INTO sections (name,description,display_order) VALUES ('$section','$description','$max_display_order')";
-	$result = $database->query($query);
-
-    if (isset($result)) {
-    	$statusMessage = "Section created successfully!";
+    // Check if the insert operation was successful
+    if ($result) {
+        $statusMessage = "Section created successfully!";
     } else {
-    	$statusMessage = "Error: Section not created!";
+        $statusMessage = "Error: Section not created!";
     }
 
     return $statusMessage;
-
 }
 
 function deleteSection() {
+    global $database;
 
-	global $database;
+    // Escape user input for security
+    $id = $database->real_escape_string($_POST['section']);
 
-	$id = $database->escape_string($_POST['section']);
+    if (filter_has_var(INPUT_POST, 'deleteme')) {
+        // Delete section from sections table
+        $query = "DELETE FROM sections WHERE id='$id'";
+        $result = $database->query($query);
 
-	if (filter_has_var(INPUT_POST, 'deleteme')) {
+        // Reset capabilities associated with the deleted section
+        $query_reset_capability = "UPDATE capabilities SET nav_menu_section=0 WHERE nav_menu_section=$id";
+        $result_reset_capability = $database->query($query_reset_capability);
+    }
 
-		$query = "DELETE FROM sections WHERE id='$id'";
-		$result = $database->query($query);
-
-		$query_reset_capability = "UPDATE capabilities SET nav_menu_section=0 WHERE nav_menu_section=$id";
-		$result_reset_capability = $database->query($query_reset_capability);
-
-	}
-
+    // Check if the reset operation was successful
     if (isset($result_reset_capability)) {
-    	$statusMessage = "Section deleted successfully!";
+        $statusMessage = "Section deleted successfully!";
     } else {
-    	$statusMessage = "Error: Section not deleted!";
+        $statusMessage = "Error: Section not deleted!";
     }
 
     return $statusMessage;
-
 }
 
 function getAllSectionsForDelete() {
+    global $database;
 
-	global $database;
+    $query = "SELECT * FROM sections";
+    $result = $database->query($query);
 
-	$query = "SELECT * FROM sections";
-	$result = $database->query($query);
+    echo '<select name="section" id="section">';
 
-	echo '<select name="section" id="section">';
+    while ($row = $result->fetch_assoc()) {
+        $id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
+        $section = htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8');
+        echo "<option value='$id'>$section</option>";
+    }
 
-	while ($row = $result->fetch_assoc()) {
-		$id = $row['id'];
-		$section = $row['name'];
-	 	echo "<option value='$id'>$section</option>";
-	}
-
-	echo '</select>';
-
+    echo '</select>';
 }
 
 function getSingleSectionForUpdate($editId) {
+    global $database;
 
-	global $database;
+    $query = "SELECT * FROM sections WHERE id = $editId";
+    $result = $database->query($query);
 
-	$query = "SELECT * FROM sections WHERE id = $editId";
-	$result = $database->query($query);
+    echo '<form action="section_update.php" method="POST">';
+    echo '<div class="form-group">';
 
-	echo '<form action="section_update.php" method="POST">';
-	echo '<div class="form-group">';
+    while ($row = $result->fetch_assoc()) {
+        $id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
+        $section = htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8');
+        $description = htmlspecialchars($row['description'], ENT_QUOTES, 'UTF-8');
 
-	while ($row = $result->fetch_assoc()) {
-		$id = $row['id'];
-		$section = $row['name'];
-		$description = $row['description'];
+        echo "<h1>Section Title</h1>";
+        echo '<textarea id="section" name="section" rows="3" cols="1" class="form-control">';
+        echo $section;
+        echo '</textarea>';
 
-		echo "<h1>Section Title</h1>";
-		echo '<textarea id="section" name="section" rows="3" cols="1" class="form-control">';
-		echo $section;
-		echo '</textarea>';
+        echo "<h1>Description</h1>";
+        echo '<textarea id="description" name="description" rows="3" cols="1" class="tinymce">';
+        echo $description;
+        echo '</textarea>';
+    }
 
-		echo "<h1>Description</h1>";
-		echo '<textarea id="description" name="description" rows="3" cols="1" class="tinymce">';
-		echo $description;
-		echo '</textarea>';
-
-	}
-	
-	echo '</div>';
-	echo '<input type="hidden" id="saveId" name="saveId" value="'.$id.'">';
-	echo '<input class="btn btn-primary" type="submit" name="submit" value="Save">';
-	echo '</form>';
-
+    echo '</div>';
+    echo '<input type="hidden" id="saveId" name="saveId" value="' . htmlspecialchars($id, ENT_QUOTES, 'UTF-8') . '">';
+    echo '<input class="btn btn-primary" type="submit" name="submit" value="Save">';
+    echo '</form>';
 }
 
 function updateSingleSection($saveId) {
+    global $database;
 
-	global $database;
+    // Escape user inputs for security
+    $section = $database->real_escape_string($_POST['section']);
+    $description = $database->real_escape_string($_POST['description']);
 
-	$section = $database->escape_string($_POST['section']);
-	$description = $database->escape_string($_POST['description']);
+    // Update section details
+    $query = "UPDATE sections SET name='$section', description='$description' WHERE id='$saveId'";
+    $result = $database->query($query);
 
-	$query = "UPDATE sections SET name='$section',description='$description' WHERE id='$saveId'";
-	$result = $database->query($query);
-
-    if (isset($result)) {
-    	$statusMessage = "Section updated successfully! Just a moment...";
-    	$statusMessage .= "<meta http-equiv='refresh' content='3; url=section_update.php' />";
+    // Check if the update operation was successful
+    if ($result) {
+        $statusMessage = "Section updated successfully! Just a moment...";
+        $statusMessage .= "<meta http-equiv='refresh' content='3; url=section_update.php' />";
     } else {
-    	$statusMessage = "Error: Section not updated!";
+        $statusMessage = "Error: Section not updated!";
     }
 
     return $statusMessage;
-
 }
 
 function getAllSectionsForUpdate() {
+    global $database;
 
-	global $database;
+    $query = "SELECT * FROM sections";
+    $result = $database->query($query);
 
-	$query = "SELECT * FROM sections";
-	$result = $database->query($query);
+    echo '<p>&nbsp;</p>';
+    echo '<form action="section_update.php" method="POST">';
+    echo '<select name="selectId">';
 
-	echo '<p>&nbsp;</p>';
-	echo '<form action="section_update.php" method="POST">';
-	echo '<select name="selectId">';
+    while ($row = $result->fetch_assoc()) {
+        $id = htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8');
+        $section = htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8');
+        echo "<option value='$id'>$section</option>";
+    }
 
-	while ($row = $result->fetch_assoc()) {
-		$id = $row['id'];
-		$section = $row['name'];
-	 	echo "<option value='$id'>$section</option>";
-	}
-
-	echo '</select><br><input type="submit" value="Select"></form>';
-
+    echo '</select><br><input type="submit" value="Select"></form>';
 }
 
 function getAllSectionsForSelection($editId) {
+    global $database;
 
-	global $database;
+    // Fetch current nav_menu_section for the given capability
+    $query1 = "SELECT nav_menu_section FROM capabilities WHERE id='$editId'";
+    $result1 = $database->query($query1);
 
-	$query1 = "SELECT nav_menu_section FROM capabilities WHERE id='$editId'";
-	$result1 = $database->query($query1);
+    $row1 = $result1->fetch_array();
+    $current_nav_menu_section = $row1['nav_menu_section'];
 
-	$row1 = $result1->fetch_array();
-	$current_nav_menu_section = $row1['nav_menu_section'];
+    $additional_option = '';
+    if (isset($current_nav_menu_section)) {
+        // Fetch the current section details
+        $query2 = "SELECT id, name FROM sections WHERE id='$current_nav_menu_section'";
+        $result2 = $database->query($query2);
 
-	if (isset($current_nav_menu_section)) {
+        while ($row2 = $result2->fetch_assoc()) {
+            $id2 = htmlspecialchars($row2['id'], ENT_QUOTES, 'UTF-8');
+            $section2 = htmlspecialchars($row2['name'], ENT_QUOTES, 'UTF-8');
+            $additional_option = "<option value='$id2'>$section2</option>";
+        }
+    }
 
-		$query2 = "SELECT id,name FROM sections WHERE id='$current_nav_menu_section'";
-		$result2 = $database->query($query2);
+    // Fetch all sections
+    $query3 = "SELECT id, name FROM sections";
+    $result3 = $database->query($query3);
 
-		while ($row2 = $result2->fetch_assoc()) {
-			$id2 = $row2['id'];
-			$section2 = $row2['name'];
-			$additional_option = "<option value='$id2'>$section2</option>";
-		}
+    echo '<select name="section" id="section">';
 
-	}
+    if (!empty($additional_option)) {
+        echo $additional_option;
+    }
 
-	$query3 = "SELECT id,name FROM sections";
-	$result3 = $database->query($query3);
+    while ($row3 = $result3->fetch_assoc()) {
+        $id3 = htmlspecialchars($row3['id'], ENT_QUOTES, 'UTF-8');
+        $section3 = htmlspecialchars($row3['name'], ENT_QUOTES, 'UTF-8');
+        if ($id3 != $id2) {
+            echo "<option value='$id3'>$section3</option>";
+        }
+    }
 
-	echo '<select name="section" id="section">';
-
-	if (isset($additional_option)) {
-		echo $additional_option;
-	}
-
-	while ($row3 = $result3->fetch_assoc()) {
-		$id3 = $row3['id'];
-		$section3 = $row3['name'];
-		if ($id3 != $id2) {
-			echo "<option value='$id3'>$section3</option>";
-		}
-	 	
-	}
-
-	echo '</select>';
-
+    echo '</select>';
 }
 
 function getAllSectionsForCreate() {
+    global $database;
 
-	global $database;
+    $current_nav_menu_section = null;
+    if (isset($_POST['section'])) {
+        $current_nav_menu_section = $database->real_escape_string($_POST['section']);
+    }
 
-	if (isset($_POST['section'])) {
-		$current_nav_menu_section = $database->escape_string($_POST['section']);
-	} 
+    $additional_option = '';
+    if ($current_nav_menu_section) {
+        $query = "SELECT id, name FROM sections WHERE id = '$current_nav_menu_section'";
+        $result = $database->query($query);
 
-	if (isset($current_nav_menu_section)) {
+        if ($row = $result->fetch_assoc()) {
+            $id = $row['id'];
+            $name = $row['name'];
+            $additional_option = "<option value='$id' selected='selected'>$name</option>";
+        }
+    }
 
-		$query2a = "SELECT id,name FROM sections WHERE id='$current_nav_menu_section'";
-		$result2a = $database->query($query2a);
+    $query = "SELECT id, name FROM sections";
+    $result = $database->query($query);
 
-		while ($row2a = $result2a->fetch_assoc()) {
-			$id2 = $row2a['id'];
-			$section2 = $row2a['name'];
-			$additional_option = "<option value='$id2' selected='selected'>$section2</option>";
-		}
+    echo '<select name="section" id="section">';
+    if ($additional_option) {
+        echo $additional_option;
+    }
 
-	}
-
-	$query3 = "SELECT id,name FROM sections";
-	$result3 = $database->query($query3);
-
-	echo '<select name="section" id="section">';
-
-	if (isset($additional_option)) {
-		echo $additional_option;
-	}
-
-	while ($row3 = $result3->fetch_assoc()) {
-		$id3 = $row3['id'];
-		$section3 = $row3['name'];
-			echo "<option value='$id3'>$section3</option>";
-	 	
-	}
-
-	echo '</select>';
-
+    while ($row = $result->fetch_assoc()) {
+        $id = $row['id'];
+        $name = $row['name'];
+        echo "<option value='$id'>$name</option>";
+    }
+    echo '</select>';
 }
 
 function assignToSection($sectionId, $saveId) {
+    global $database;
 
-	global $database;
-
-	$query = "UPDATE capabilities SET nav_menu_section='$sectionId' WHERE id='$saveId'";
-	$result = $database->query($query);
-
+    $query = "UPDATE capabilities SET nav_menu_section = ? WHERE id = ?";
+    $stmt = $database->prepare($query);
+    $stmt->bind_param('ii', $sectionId, $saveId);
+    $stmt->execute();
+    $stmt->close();
 }
 
 function buildNavMenu() {
+    global $database;
 
-	global $database;
+    echo '<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>';
 
-	echo '<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>';
+    echo '
+    <script type="text/javascript">
+        $(parent.document).ready(function () {
+            $("div.tags").on("click", "input:checkbox", function () {
+                var rel = $(this).attr("rel");
+                var labels = $(".cont-checkbox > label." + rel, window.parent.document);
+                labels.css({"font-weight": "", "color": "", "border": ""});
 
-	echo '
-	<script type="text/javascript">
-		
-	$(parent.document).ready(function () {
+                if ($(this).is(":checked")) {
+                    labels.css({"font-weight": "900", "color": "black", "border": "1px solid #003300"});
+                }
 
-	    $("div.tags").find("input:checkbox").live("click", function () {
+                if (!$("div.tags").find("input:checked").length) {
+                    $(".cont-checkbox > label", window.parent.document).css({"font-weight": "", "color": "", "border": ""});
+                }
+            });
+        });
+    </script>
+    ';
 
-	   		$(".cont-checkbox > label." + $(this).attr("rel"), window.parent.document).css("font-weight", "");
-	   		$(".cont-checkbox > label." + $(this).attr("rel"), window.parent.document).css("color", "");
-	   		$(".cont-checkbox > label." + $(this).attr("rel"), window.parent.document).css("border", "");
+    $query_sections = "SELECT id, name, description FROM sections ORDER BY display_order";
+    $result_sections = $database->query($query_sections);
 
-			if ($(this).prop("input:checked", false)) {
-				$(".cont-checkbox > label." + $(this).attr("rel"), window.parent.document).css("font-weight", "");
-				$(".cont-checkbox > label." + $(this).attr("rel"), window.parent.document).css("color", "");
-				$(".cont-checkbox > label." + $(this).attr("rel"), window.parent.document).css("border", "");
-			}
-	        
-			$("div.tags").find("input:checked").each(function () {
-	            $(".cont-checkbox > label." + $(this).attr("rel"), window.parent.document).css("font-weight", "900");
-	            $(".cont-checkbox > label." + $(this).attr("rel"), window.parent.document).css("color", "black");
-	            $(".cont-checkbox > label." + $(this).attr("rel"), window.parent.document).css("border", "1px solid #003300");
-	        });
-			
-			if (!$("div.tags").find("input:checked").length) {
-				$(".cont-checkbox > label", window.parent.document).css("font-weight", "");
-				$(".cont-checkbox > label", window.parent.document).css("color", "");
-				$(".cont-checkbox > label", window.parent.document).css("border", "");
-			}
+    $popupCounter = 1;
 
-	    });
-	});
+    while ($row1 = $result_sections->fetch_assoc()) {
+        $section_id = $row1['id'];
+        $section_name = $row1['name'];
+        $section_description = $row1['description'];
 
-	</script>
-	';
+        echo "<span style='font-size: 14px; font-family: Arial;'><b>$section_name</b>&nbsp;&nbsp;<button class='open$popupCounter' style='border-radius: 25px; cursor: pointer; font-weight: bold;'>i</button></span><br>";
 
-	$query_sections = "SELECT id,name,description FROM sections ORDER BY display_order";
-	$result_sections = $database->query($query_sections);
+        echo "
+        <script type='text/javascript'>
+        $(document).ready(function () {
+            $('.open$popupCounter').on('click', function() {
+                $('.popup-overlay$popupCounter, .popup-content$popupCounter').addClass('active');
+            });
 
-	$popupCounter = 1;
+            $('.close$popupCounter, .popup-overlay$popupCounter').on('click', function() {
+                $('.popup-overlay$popupCounter, .popup-content$popupCounter').removeClass('active');
+            });
+        });
+        </script>
+        ";
 
-	while ($row1 = $result_sections->fetch_assoc()) {
-		$section_id = $row1['id'];
-		$section_name = $row1['name'];
-		$section_description = $row1['description'];
+        echo "
+        <div class='popup-overlay$popupCounter'>
+            <div class='popup-content$popupCounter'>
+                <p>$section_description</p>
+                <button class='close$popupCounter'>close</button><br/>
+            </div>
+        </div>
+        ";
 
-	 	echo "<span style='font-size: 14px; font-family: Arial;'><b>$section_name</b>&nbsp;&nbsp;<button class=open$popupCounter style='border-radius: 25px; cursor: pointer; font-weight: bold;'>i</button></span><br>";
+        $popupCounter++;
 
-	 	// Ugly way to do this, generating JQuery for each iteration.
-	 	// So please let me know if you find an alternative.
-		echo '
+        echo "<div class='tags' style='font-size: 12px; font-family: Arial;'>";
 
-		<script type="text/javascript">
-		$(document).ready(function () {
-			
-			$(".open'.$popupCounter.'").on("click", function() {
-			  $(".popup-overlay'.$popupCounter.', .popup-content'.$popupCounter.'").addClass("active");
-			});
+        $query_capabilities = "SELECT * FROM capabilities WHERE nav_menu_section = $section_id";
+        $result_capabilities = $database->query($query_capabilities);
 
-			$(".close'.$popupCounter.', .popup-overlay'.$popupCounter.'").on("click", function() {
-			  $(".popup-overlay'.$popupCounter.', .popup-content'.$popupCounter.'").removeClass("active");
-			});
-		});
-		</script>
+        while ($row2 = $result_capabilities->fetch_assoc()) {
+            $capability_id = $row2['id'];
+            $capability_name = $row2['capability'];
+            $capability_name_formatted = strtolower(str_replace([" ", "/", "-", "(", ")", ",", "."], "_", $capability_name));
 
-		';
-		
-	 	echo "
-		    <div class='popup-overlay$popupCounter'>
-		        <div class='popup-content$popupCounter'>
-		        <p>$section_description</p>
-		        <button class='Close$popupCounter'>close</button><br/>
-		        </div>
-		    </div>
-	 	";
+            echo "<input type='checkbox' rel='$capability_name_formatted' value='$capability_id'>&nbsp;";
+            echo "<label for='capability'>$capability_name</label><br>";
+        }
 
-	 	$popupCounter++;
-
-
-	 	echo "<div class='tags' style='font-size: 12px; font-family: Arial;'>";
-
-	 		$query_capabilities = "SELECT * FROM capabilities WHERE nav_menu_section=$section_id";
-	 		$result_capabilities = $database->query($query_capabilities);
-
-	 		while ($row2 = $result_capabilities->fetch_assoc()) {
-	 			$capability_id = $row2['id'];				
-	 			$capability_name = $row2['capability']; 
-	 			$capability_name_formatted = strtolower(str_replace(" ", "_", $capability_name));
-	 			$capability_name_formatted = str_replace("/", "_", $capability_name_formatted);
-	 			$capability_name_formatted = str_replace("-", "_", $capability_name_formatted);
-	 			$capability_name_formatted = str_replace("(", "_", $capability_name_formatted);
-	 			$capability_name_formatted = str_replace(")", "_", $capability_name_formatted);
-	  			$capability_name_formatted = str_replace(",", "_", $capability_name_formatted);
-	 			$capability_name_formatted = str_replace(".", "_", $capability_name_formatted);
-	 			
-	 			echo "<input type='checkbox' rel='$capability_name_formatted' value='$capability_id'>&nbsp;";
-	 			echo "<label for='capability'>$capability_name</label>";
-	 			echo "<br>";
-	 		}
-
-	 	echo '</div><br>';
-
-	}
-
+        echo '</div><br>';
+    }
 }
 
 function populateResults() {
+    global $database;
 
-	global $database;
+    echo '
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $(".cont-checkbox label").on("click", function (event) {
+                var $check = $(":checkbox", this);
+                $check.prop("checked", !$check.prop("checked"));
+                $(".flex-container").remove();
+            });
 
-	echo '
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+            $(".cont-checkbox :checkbox").on("click", function (event) {
+                event.stopPropagation();
+                var selected = $("input:checkbox:checked").map(function() {
+                    return $(this).val();
+                }).get();
 
-	<script type="text/javascript">
+                $.post("panel.php", { ids: selected }, function(response) {
+                    $(".panel").after(response);
+                    $(".panel").slideToggle("slow");
+                });
+            });
+        });
+    </script>
+    ';
 
-	$(document).ready(function () {
+    echo '
+    <div class="cont-bg">    
+        <div class="cont-main">
+    ';
 
-	    $(".cont-checkbox label").on("click", function (event) {
+    $chkBoxCounter = 1;
 
-	        var $check = $(":checkbox", this);
-	        $check.prop("checked", !$check.prop("checked"));
+    $query_items = "SELECT * FROM items ORDER BY item_name ASC";
+    $result_items = $database->query($query_items);
 
-	    	$(".flex-container").remove();
-	    	
-	    });
+    while ($row1 = $result_items->fetch_assoc()) {
+        $item_id = $row1['id'];
+        $item_name = $row1['item_name'];
+        $item_tagline = $row1['tagline'];
 
-	    $(".cont-checkbox :checkbox").on("click", function (event) {
-	        event.stopPropagation();
-	    	
-	        var selected = $("input:checkbox:checked").map(function(){
-	            return $(this).val();
-	        }).get();
+        $query_capabilities_fields = "SELECT capability_id FROM capabilities_fields WHERE item_id = $item_id";
+        $result_capabilities_fields = $database->query($query_capabilities_fields);
 
-		    $.post("panel.php", {ids: selected}, function(response) {
-		      $(".panel").after(response);
-		      $(".panel").slideToggle("slow");
-		    });
+        $capability_rel_string = "";
 
-	    });
-	});
+        while ($row2 = $result_capabilities_fields->fetch_assoc()) {
+            $capability_field_id = $row2['capability_id'];
 
-	</script>
-';
+            $query_capabilities = "SELECT capability FROM capabilities WHERE id = $capability_field_id";
+            $result_capabilities = $database->query($query_capabilities);
 
-	echo '
-	<div class="cont-bg">	
-	  
-	  <div class="cont-main">
-	';
+            $capability = $result_capabilities->fetch_row();
+            $capability_name = $capability[0];
 
-	$chkBoxCounter = 1;
+            $capability_name_formatted = strtolower(str_replace([" ", "/", "-", "(", ")", ",", "."], "_", $capability_name));
+            $capability_rel_string .= $capability_name_formatted . " ";
+        }
 
-	$query_items = "SELECT * FROM items ORDER BY item_name ASC";
-	$result_items = $database->query($query_items);
+        echo "
+        <div class='cont-checkbox'>
+            <input type='checkbox' value='$item_id' id='serviceCheckbox$chkBoxCounter'>
+            <label for='serviceCheckbox$chkBoxCounter' class='$capability_rel_string'>
+                <img src='images/unchecked.png' width='150'>
+                <span class='cover-checkbox'>
+                    <svg viewBox='0.5 1 12 12'>
+                        <polyline points='1.5 6 4.5 9 10.5 1'></polyline>
+                    </svg>
+                </span>
+                <div class='info'>$item_name</div>
+                <div class='infoSubTitle'>$item_tagline</div>
+            </label>
+        </div>
+        ";
 
-	while ($row1 = $result_items->fetch_assoc()) {
-		$item_id = $row1['id'];
-		$item_name = $row1['item_name'];
-		$item_tagline = $row1['tagline'];
+        $chkBoxCounter++;
+    }
 
-		$query_capabilities_fields = "SELECT capability_id FROM capabilities_fields WHERE item_id=$item_id";
-		$result_capabilities_fields = $database->query($query_capabilities_fields);
-
-		$capability_rel_string = "";
-
-		while ($row2 = $result_capabilities_fields->fetch_assoc()) {
-			$capability_field_id = $row2['capability_id'];
-
-			$query_capabilities = "SELECT capability FROM capabilities WHERE id=$capability_field_id";
-			$result_capabilities = $database->query($query_capabilities);
-
-			$capability = $result_capabilities->fetch_row();
-			$capability_name = $capability[0];
-
- 			$capability_name_formatted = strtolower(str_replace(" ", "_", $capability_name));
- 			$capability_name_formatted = str_replace("/", "_", $capability_name_formatted);
- 			$capability_name_formatted = str_replace("-", "_", $capability_name_formatted);
- 			$capability_name_formatted = str_replace("(", "_", $capability_name_formatted);
- 			$capability_name_formatted = str_replace(")", "_", $capability_name_formatted);
-  			$capability_name_formatted = str_replace(",", "_", $capability_name_formatted);
- 			$capability_name_formatted = str_replace(".", "_", $capability_name_formatted);
-
- 			$capability_rel_string .= $capability_name_formatted." ";
-
-			}
-
-		echo "
-
-	    <div class='cont-checkbox'>
-	      <input type='checkbox' value='$item_id' id='serviceCheckbox$chkBoxCounter'>
-	      <label for='serviceCheckbox$chkBoxCounter' class='$capability_rel_string'>
-	      	<img src='images/unchecked.png' width='150'>
-	        <span class='cover-checkbox'>
-	          <svg viewBox='0.5 1 12 12'>
-	            <polyline points='1.5 6 4.5 9 10.5 1'></polyline>
-	          </svg>
-	        </span>
-	        <div class='info'>$item_name</div>
-	        <div class='infoSubTitle'>$item_tagline</div>
-	    </label>
-	    </div>
-
-		";
-
-		$chkBoxCounter++;
-
-	}
-
-echo '</div>';
-
+    echo '</div>';
 }
 
 function panelQuery() {
+    global $database;
 
-	global $database;
+    if (isset($_POST['ids'])) {
+        echo '<div class="flex-container">';
 
-	if (isset($_POST['ids'])) {
+        foreach ($_POST['ids'] as $post_id) {
+            if (!isset($post_id)) {
+                continue;
+            }
 
-		echo '<div class="flex-container">';		
-		
-		foreach($_POST['ids'] as $post_id) {
-			if(!isset($post_id)) {
-				continue;
-			}			
-			
-			$query_items = "SELECT * FROM items WHERE id='$post_id'";
-			$result_items = $database->query($query_items);
-			
-			while ($row1 = $result_items->fetch_assoc()) {
-				$item_id = $row1['id'];
-				$item_name = $row1['item_name'];
+            $query_items = "SELECT * FROM items WHERE id = ?";
+            $stmt_items = $database->prepare($query_items);
+            $stmt_items->bind_param('i', $post_id);
+            $stmt_items->execute();
+            $result_items = $stmt_items->get_result();
 
-				echo '<table id="compare-tbl">';
-				echo '<thead>';
-				echo '<th>'.$item_name.'</th>';
-				echo '</thead>';
-				echo '<tbody>';
+            while ($row1 = $result_items->fetch_assoc()) {
+                $item_id = $row1['id'];
+                $item_name = $row1['item_name'];
 
-				$query_item_fields = "SELECT * FROM item_fields INNER JOIN field_types WHERE field_type=field_types.id AND item_id=$item_id ORDER BY field_types.display_order ASC";
-				$result_item_fields = $database->query($query_item_fields);
+                echo '<table id="compare-tbl">';
+                echo '<thead>';
+                echo '<th>' . htmlspecialchars($item_name) . '</th>';
+                echo '</thead>';
+                echo '<tbody>';
 
-				$divNum = 1;
-				while ($row2 = $result_item_fields->fetch_assoc()) {
-					$field_type = $row2['field_type'];
-					$field_text = $row2['field_text'];
-					if ($field_text == "") {
-						$field_text = "<p>undefined</p>";
-					}
-					
-					echo "<tr valign='top'>";
+                $query_item_fields = "
+                    SELECT * FROM item_fields 
+                    INNER JOIN field_types ON field_type = field_types.id 
+                    WHERE item_id = ? 
+                    ORDER BY field_types.display_order ASC
+                ";
+                $stmt_item_fields = $database->prepare($query_item_fields);
+                $stmt_item_fields->bind_param('i', $item_id);
+                $stmt_item_fields->execute();
+                $result_item_fields = $stmt_item_fields->get_result();
 
-					$query_field_type = "SELECT type FROM field_types WHERE id=$field_type";
-					$result_field_type = $database->query($query_field_type);
-					
-					while ($row3 = $result_field_type->fetch_assoc()) {
-						$field_name = $row3['type'];
-						
-						echo "<td><div class='div".$divNum."'><span style='color: green; font-weight: bold;'>$field_name:</span> $field_text</div></td>";
-						
-						echo "<script type='text/javascript'>";
-						
-						echo '
-						var heights = $("div.div'.$divNum.'").map(function () 
-							{
-							return $(this).height();
-							}).get();
+                $divNum = 1;
+                while ($row2 = $result_item_fields->fetch_assoc()) {
+                    $field_type = $row2['field_type'];
+                    $field_text = $row2['field_text'] ?: "<p>undefined</p>";
 
-						maxHeight = Math.max.apply(null, heights);
-						';
-						
-						echo "$('#compare-tbl div.div".$divNum."').css('height', maxHeight); // Set all table row heights to longest field_text";
-						
-						echo "</script>";
+                    echo "<tr valign='top'>";
 
-					$divNum++;
-					}					
-					
-					echo "</tr>";
+                    $query_field_type = "SELECT type FROM field_types WHERE id = ?";
+                    $stmt_field_type = $database->prepare($query_field_type);
+                    $stmt_field_type->bind_param('i', $field_type);
+                    $stmt_field_type->execute();
+                    $result_field_type = $stmt_field_type->get_result();
 
-				}
+                    while ($row3 = $result_field_type->fetch_assoc()) {
+                        $field_name = $row3['type'];
 
-				echo '</tbody>';
-				echo '</table>';
-				
-			}
-			
-		}
+                        echo "<td><div class='div$divNum'><span style='color: green; font-weight: bold;'>$field_name:</span> $field_text</div></td>";
 
-		echo '</div>';		
+                        echo "<script type='text/javascript'>
+                            var heights = $('div.div$divNum').map(function () {
+                                return $(this).height();
+                            }).get();
+                            var maxHeight = Math.max.apply(null, heights);
+                            $('#compare-tbl div.div$divNum').css('height', maxHeight);
+                        </script>";
 
-	} 
+                        $divNum++;
+                    }
 
+                    echo "</tr>";
+                }
+
+                echo '</tbody>';
+                echo '</table>';
+            }
+
+            $stmt_items->close();
+        }
+
+        echo '</div>';
+    }
 }
 
 function allServices() {
+    global $database;
 
-	global $database;
+    $query_items = "SELECT * FROM items";
+    $result_items = $database->query($query_items);
 
-	$query_items = "SELECT * FROM items";
-	$result_items = $database->query($query_items);
+    while ($row1 = $result_items->fetch_assoc()) {
+        $item_id = $row1['id'];
+        $item_name = htmlspecialchars($row1['item_name']);
 
-	while ($row1 = $result_items->fetch_assoc()) {
-		$item_id = $row1['id'];
-		$item_name = $row1['item_name'];
+        echo "<h3>$item_name</h3>";
 
-		echo "<h3>$item_name</h3>";
+        $query_item_fields = "
+            SELECT * FROM item_fields 
+            INNER JOIN field_types ON field_type = field_types.id 
+            WHERE item_id = ? 
+            ORDER BY field_types.display_order ASC
+        ";
+        $stmt_item_fields = $database->prepare($query_item_fields);
+        $stmt_item_fields->bind_param('i', $item_id);
+        $stmt_item_fields->execute();
+        $result_item_fields = $stmt_item_fields->get_result();
 
-		$query_item_fields = "SELECT * FROM item_fields INNER JOIN field_types WHERE field_type=field_types.id AND item_id=$item_id ORDER BY field_types.display_order ASC";
-		$result_item_fields = $database->query($query_item_fields);
+        while ($row2 = $result_item_fields->fetch_assoc()) {
+            $field_type = $row2['field_type'];
+            $field_text = $row2['field_text'] ?: "<p>&nbsp;</p>";
 
-		while ($row2 = $result_item_fields->fetch_assoc()) {
-			$field_type = $row2['field_type'];
-			$field_text = $row2['field_text'];
-			
-			if (empty($field_text)) {
-				$field_text = "<p>&nbsp;</p>";
-			}
+            $query_field_type = "SELECT type FROM field_types WHERE id = ?";
+            $stmt_field_type = $database->prepare($query_field_type);
+            $stmt_field_type->bind_param('i', $field_type);
+            $stmt_field_type->execute();
+            $result_field_type = $stmt_field_type->get_result();
 
-			$query_field_type = "SELECT type FROM field_types WHERE id=$field_type";
-			$result_field_type = $database->query($query_field_type);
+            while ($row3 = $result_field_type->fetch_assoc()) {
+                $field_name = htmlspecialchars($row3['type']);
 
-			while ($row3 = $result_field_type->fetch_assoc()) {
+                echo "<div class='resultscell'><span style='color: green; font-weight: bold;'>$field_name:</span> $field_text</div>";
+            }
 
-				$field_name = $row3['type'];
+            $stmt_field_type->close();
+        }
 
-				//echo '<div class="resultsrow">';
-				echo "<div class='resultscell'><span style='color: green; font-weight: bold;'>$field_name:</span> $field_text</div>";
-				//echo '</div>';
-
-			}		
-
-		}
-
-	}
-
+        $stmt_item_fields->close();
+    }
 }
 
 function getSectionsForMenu() {
-
     global $database;
 
-    $query = "SELECT * FROM sections order by display_order ASC";
-    $records = $database->query($query);
+    $query = "SELECT * FROM sections ORDER BY display_order ASC";
+    $result = $database->query($query);
 
-    $all = array();
-    while($data = $records->fetch_assoc())
-    {
-        $all[] = $data;
+    $sections = [];
+    while ($row = $result->fetch_assoc()) {
+        $sections[] = $row;
     }
-    return $all;
+
+    return $sections;
 }
 
 function saveSectionsForMenu($id, $order) {
-
     global $database;
 
-    $query = "UPDATE sections SET display_order=".$order." WHERE id=".$id;
-    $result = $database->query($query);
-    echo $query."<br>";
+    $query = "UPDATE sections SET display_order = ? WHERE id = ?";
+    $stmt = $database->prepare($query);
+    $stmt->bind_param('ii', $order, $id);
+    $stmt->execute();
 
-    if (isset($result)) {
-    	$statusMessage = "Menu updated successfully!";
+    if ($stmt->affected_rows > 0) {
+        $statusMessage = "Menu updated successfully!";
     } else {
-    	$statusMessage = "Error: Menu not updated!";
+        $statusMessage = "Error: Menu not updated!";
     }
 
+    $stmt->close();
     return $statusMessage;
-
 }
 
 function getFieldTypesForMenu() {
-
     global $database;
 
-    $query = "SELECT * FROM field_types order by display_order ASC";
-    $records= $database->query($query);
+    $query = "SELECT * FROM field_types ORDER BY display_order ASC";
+    $result = $database->query($query);
 
-    $all = array();
-    while($data = $records->fetch_assoc())
-    {
-        $all[] = $data;
+    $fieldTypes = [];
+    while ($row = $result->fetch_assoc()) {
+        $fieldTypes[] = $row;
     }
-    return $all;
+
+    return $fieldTypes;
 }
 
 function saveFieldTypesForMenu($id, $order) {
-
     global $database;
 
-    $query = "UPDATE field_types SET display_order=".$order." WHERE id=".$id;
-    $records= $database->query($query);
-
+    $query = "UPDATE field_types SET display_order = ? WHERE id = ?";
+    $stmt = $database->prepare($query);
+    $stmt->bind_param('ii', $order, $id);
+    $stmt->execute();
+    $stmt->close();
 }
-
 
 ?>

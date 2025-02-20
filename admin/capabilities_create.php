@@ -4,43 +4,35 @@ session_start();
 
 require_once("../functions.php");
 
+// Redirect to login page if the user is not logged in
 if (!isset($_SESSION['user'])) {
-	header("location:login.php");
+    header("Location: login.php");
+    exit();
 }
 
-if (isset($_POST['submit'])) {
+$statusMessage = '';
 
-	$statusMessage = createCapabilities();
-
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
+    $statusMessage = createCapabilities();
 }
-
 
 require_once("header.php");
 
-if (isset($statusMessage)) {
-	echo "<span style='color: green;'>$statusMessage</span><br>";
+if (!empty($statusMessage)) {
+    echo "<span style='color: green;'>$statusMessage</span><br>";
 }
+?>
 
-echo '
+<form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST">
+    <div class="form-group">
+        <label for="capability">Capability</label>
+        <input type="text" name="capability" class="form-control" required>
+        <p>&nbsp;</p>
+        <?php getAllSectionsForCreate(); ?>
+    </div>
+    <input class="btn btn-primary" type="submit" name="submit" value="Add">
+</form>
 
-		<form action="'.$_SERVER['PHP_SELF'].'" method="POST">
-
-			<div class="form-group">
-				<label for="capability">Capability</label>
-				<input type="text" name="capability" class="form-control">
-				<p>&nbsp;</p>
-';
-
-				getAllSectionsForCreate();
-
-echo '
-			</div>
-
-			<input class="btn btn-primary" type="submit" name="submit" value="Add">
-
-		</form>
-';
-
+<?php
 require_once("footer.php");
-
 ?>
