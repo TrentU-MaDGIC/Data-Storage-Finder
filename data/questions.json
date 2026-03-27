@@ -1,17 +1,27 @@
 [
   {
     "id": "classification",
-    "question": "What is the classification of your data?",
-    "options": ["Public", "Sensitive", "Confidential", "HIPAA"]
+    "question": "What risk level is your data?",
+    "options": ["Low", "Medium", "High"]
   },
   {
     "id": "collaboration",
-    "question": "With whom do you need to share your data?",
-    "options": ["Private", "Internal", "External", "Public"]
+    "question": "What type of data storage are you looking for?",
+    "options": ["Active Research", "Backup", "Archival & Open Data Sharing"]
   },
   {
     "id": "features",
-    "question": "What features do you need?",
-    "options": ["Backup", "Snapshots", "Replication", "DOI"]
+    "question": "Are you collaborating with other researchers?",
+    "options": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"]
+  },
+  {
+    "id": "features",
+    "question": "Where will you be accessing your data from?",
+    "options": ["Laptop/Desktop Computer", "Mobile Device"]
+  },
+  {
+    "id": "features",
+    "question": "How much data do you need storage for?",
+    "options": ["Under 100 GB", "100 GB — 1 TB", "1 — 5 TB", "Over 5 TB"]
   }
 ]
