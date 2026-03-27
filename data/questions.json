@@ -1,0 +1,17 @@
+[
+  {
+    "id": "classification",
+    "question": "What is the classification of your data?",
+    "options": ["Public", "Sensitive", "Confidential", "HIPAA"]
+  },
+  {
+    "id": "collaboration",
+    "question": "With whom do you need to share your data?",
+    "options": ["Private", "Internal", "External", "Public"]
+  },
+  {
+    "id": "features",
+    "question": "What features do you need?",
+    "options": ["Backup", "Snapshots", "Replication", "DOI"]
+  }
+]
