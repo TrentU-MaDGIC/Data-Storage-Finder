@@ -1,6 +1,6 @@
 [
   {
-    "id": "classification",
+    "id": "risk",
     "question": "What risk level is your data?",
     "options": ["Low", "Medium", "High"]
   },
@@ -15,7 +15,7 @@
     "options": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"]
   },
   {
-    "id": "features",
+    "id": "capacity",
     "question": "How much data do you need storage for?",
     "options": ["Under 1 TB", "1 — 5 TB", "Over 5 TB"]
   }
