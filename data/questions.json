@@ -5,12 +5,12 @@
     "options": ["Low", "Medium", "High"]
   },
   {
-    "id": "collaboration",
+    "id": "type",
     "question": "What type of data storage are you looking for?",
     "options": ["Active Research", "Backup", "Archival & Open Data Sharing"]
   },
   {
-    "id": "features",
+    "id": "collaboration",
     "question": "Are you collaborating with other researchers?",
     "options": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"]
   },
