@@ -1,12 +1,13 @@
 [
   {
-    "name": "Google Drive",
+    "name": "Alliance Advanced Research Computing",
     "description": "Cloud storage suitable for general public or sensitive data.",
     "classification": ["Public", "Sensitive"],
     "collaboration": ["Internal", "External", "Public"],
     "features": ["Backup"],
     "cost": "Free for students",
-    "capacity": "Varies"
+    "capacity": "Varies",
+    "risk": ["Low"]
   },
   {
     "name": "Secure Research Server",
