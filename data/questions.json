@@ -17,6 +17,6 @@
   {
     "id": "capacity",
     "question": "How much data do you need storage for?",
-    "options": ["Under 1 TB", "1 — 5 TB", "Over 5 TB"]
+    "options": ["Under 1 TB", "1 - 5 TB", "Over 5 TB"]
   }
 ]
