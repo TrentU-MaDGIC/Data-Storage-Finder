@@ -4,17 +4,95 @@
     "description": "Research computing, storage, and software from the Digital Research Alliance of Canada.",
     "type": ["Active Research", "Backup"],
     "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent"],
-    "cost": "Free for students",
-    "capacity": ["Under 1 TB", "1 — 5 TB", "Over 5 TB"],
+    "capacity": ["Under 1 TB", "1 - 5 TB", "Over 5 TB"],
     "risk": ["Low"]
   },
   {
-    "name": "Alliance NextCloud ",
+    "name": "Alliance NextCloud",
     "description": "Cloud storage from the Digital Research Alliance of Canada.",
-    "classification": ["Confidential", "HIPAA"],
-    "collaboration": ["Private"],
-    "features": ["Snapshots", "Replication"],
-    "cost": "Institution-supported",
-    "capacity": "Up to 50TB"
-  }
+    "type": ["Active Research", "Backup"],
+    "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent"],
+    "capacity": ["Under 1 TB"],
+    "risk": ["Low"]
+  },
+  {
+    "name": "Federated Research Data Repository (FRDR)",
+    "description": "Publish and preserve Canadian Research Data.",
+    "type": [""],
+    "collaboration": [""],
+    "capacity": [""],
+    "risk": [""]
+  },
+  {
+    "name": "Github",
+    "description": "Distributed version control system for software code.",
+    "type": [""],
+    "collaboration": [""],
+    "capacity": [""],
+    "risk": [""]
+  },
+  {
+    "name": "Trent Dataverse",
+    "description": "Store, share, publish and discover research data!",
+    "type": [""],
+    "collaboration": [""],
+    "capacity": [""],
+    "risk": [""]
+  },
+  {
+    "name": "Trent based custom solution",
+    "description": "",
+    "type": [""],
+    "collaboration": [""],
+    "capacity": [""],
+    "risk": [""]
+  },
+  {
+    "name": "Microsoft OneDrive (institutional)",
+    "description": "",
+    "type": [""],
+    "collaboration": [""],
+    "capacity": [""],
+    "risk": [""]
+  },
+  {
+    "name": "Microsoft OneDrive (institutional) with Encrypted Data",
+    "description": "",
+    "type": [""],
+    "collaboration": [""],
+    "capacity": [""],
+    "risk": [""]
+  },
+  {
+    "name": "Microsoft SharePoint (Institutional)",
+    "description": "Communication and document storage for large groups.",
+    "type": [""],
+    "collaboration": [""],
+    "capacity": [""],
+    "risk": [""]
+  },
+  {
+    "name": "Microsoft Teams (institutional)",
+    "description": "Create a group space for your research team.",
+    "type": [""],
+    "collaboration": [""],
+    "capacity": [""],
+    "risk": [""]
+  },
+  {
+    "name": "Open Science Framework (OSF)",
+    "description": "Open platform for collaborative research.",
+    "type": [""],
+    "collaboration": [""],
+    "capacity": [""],
+    "risk": [""]
+  },
+  {
+    "name": "Stage2Data",
+    "description": "Canadian sovereign cloud storage and backups.",
+    "type": [""],
+    "collaboration": [""],
+    "capacity": [""],
+    "risk": ["Low", "Medium", "High"]
+  },
 ]
