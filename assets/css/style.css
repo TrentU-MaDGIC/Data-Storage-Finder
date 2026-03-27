@@ -1,0 +1,48 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f9f9f9;
+}
+
+header {
+  background: #003366;
+  color: white;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+main {
+  display: flex;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.filters {
+  width: 30%;
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.filter-section {
+  margin-bottom: 1.5rem;
+}
+
+.filter-option {
+  display: block;
+  margin: 0.25rem 0;
+}
+
+.results {
+  width: 70%;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.service-card {
+  background: white;
+  padding: 1.25rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+``
