@@ -16,12 +16,7 @@
   },
   {
     "id": "features",
-    "question": "Where will you be accessing your data from?",
-    "options": ["Laptop/Desktop Computer", "Mobile Device"]
-  },
-  {
-    "id": "features",
     "question": "How much data do you need storage for?",
-    "options": ["Under 100 GB", "100 GB — 1 TB", "1 — 5 TB", "Over 5 TB"]
+    "options": ["Under 1 TB", "1 — 5 TB", "Over 5 TB"]
   }
 ]
