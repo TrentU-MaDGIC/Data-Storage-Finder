@@ -1,17 +1,16 @@
 [
   {
     "name": "Alliance Advanced Research Computing",
-    "description": "Cloud storage suitable for general public or sensitive data.",
-    "classification": ["Public", "Sensitive"],
-    "collaboration": ["Internal", "External", "Public"],
-    "features": ["Backup"],
+    "description": "Research computing, storage, and software from the Digital Research Alliance of Canada.",
+    "type": ["Active Research", "Backup"],
+    "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent"],
     "cost": "Free for students",
-    "capacity": "Varies",
+    "capacity": ["Under 1 TB", "1 — 5 TB", "Over 5 TB"],
     "risk": ["Low"]
   },
   {
-    "name": "Secure Research Server",
-    "description": "For confidential or restricted datasets requiring strict security.",
+    "name": "Alliance NextCloud ",
+    "description": "Cloud storage from the Digital Research Alliance of Canada.",
     "classification": ["Confidential", "HIPAA"],
     "collaboration": ["Private"],
     "features": ["Snapshots", "Replication"],
