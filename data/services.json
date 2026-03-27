@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Google Drive",
+    "description": "Cloud storage suitable for general public or sensitive data.",
+    "classification": ["Public", "Sensitive"],
+    "collaboration": ["Internal", "External", "Public"],
+    "features": ["Backup"],
+    "cost": "Free for students",
+    "capacity": "Varies"
+  },
+  {
+    "name": "Secure Research Server",
+    "description": "For confidential or restricted datasets requiring strict security.",
+    "classification": ["Confidential", "HIPAA"],
+    "collaboration": ["Private"],
+    "features": ["Snapshots", "Replication"],
+    "cost": "Institution-supported",
+    "capacity": "Up to 50TB"
+  }
+]
