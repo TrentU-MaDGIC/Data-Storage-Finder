@@ -78,7 +78,7 @@ function renderServices(services) {
       <p><strong>Capacity: </strong>${s.capacity.join(', ')}</p>
       <p><strong>Risk: </strong>${s.risk.join(', ')}</p>
       <p><strong>Type: </strong>${s.type.join(', ')}</p>
-      <p><strong>Collaboration: </strong>${s.collboration.join(', ')}</p>
+      <p><strong>Collaboration: </strong>${s.collaboration.join(', ')}</p>
     `;
 
     container.appendChild(card);
