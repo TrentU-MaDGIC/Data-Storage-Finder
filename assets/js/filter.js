@@ -75,7 +75,7 @@ function renderServices(services) {
     card.innerHTML = `
       <h2>${s.name}</h2>
       <p>${s.description}</p>
-      <p><strong>Capacity:<strong>${s.capacity}</p>
+      <p><strong>Capacity:</strong>${s.capacity.join(', ')}</p>
     `;
 
     container.appendChild(card);
