@@ -18,18 +18,18 @@
   {
     "name": "Federated Research Data Repository (FRDR)",
     "description": "Publish and preserve Canadian Research Data.",
-    "type": [""],
-    "collaboration": [""],
-    "capacity": [""],
-    "risk": [""]
+    "type": ["Archival & Open Data Sharing"],
+    "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"],
+    "capacity": ["Under 1 TB", "1 - 5 TB", "Over 5 TB"],
+    "risk": ["Low"]
   },
   {
     "name": "Github",
     "description": "Distributed version control system for software code.",
-    "type": [""],
-    "collaboration": [""],
-    "capacity": [""],
-    "risk": [""]
+    "type": ["Active Research", "Backup", "Archival & Open Data Sharing"],
+    "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Public"],
+    "capacity": ["Under 1 TB"],
+    "risk": ["Low"]
   },
   {
     "name": "Trent Dataverse",
