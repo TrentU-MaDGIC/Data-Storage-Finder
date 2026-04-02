@@ -34,65 +34,65 @@
   {
     "name": "Trent Dataverse",
     "description": "Store, share, publish and discover research data!",
-    "type": [""],
-    "collaboration": [""],
-    "capacity": [""],
-    "risk": [""]
+    "type": ["Active Research", "Backup", "Archival & Open Data Sharing"],
+    "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"],
+    "capacity": ["Under 1 TB"],
+    "risk": ["Low"]
   },
   {
     "name": "Trent based custom solution",
-    "description": "",
-    "type": [""],
-    "collaboration": [""],
-    "capacity": [""],
-    "risk": [""]
+    "description": "Contact us for help with complex projects.",
+    "type": ["Active Research", "Backup", "Archival & Open Data Sharing"],
+    "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"],
+    "capacity": ["Under 1 TB", "1 - 5 TB", "Over 5 TB"],
+    "risk": ["Low", "Medium", "High"]
   },
   {
     "name": "Microsoft OneDrive (institutional)",
-    "description": "",
-    "type": [""],
-    "collaboration": [""],
-    "capacity": [""],
-    "risk": [""]
+    "description": "Save all your work and files to OneDrive and get them from any device, anywhere.",
+    "type": ["Active Research", "Backup"],
+    "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"],
+    "capacity": ["Under 1 TB"],
+    "risk": ["Low"]
   },
   {
     "name": "Microsoft OneDrive (institutional) with Encrypted Data",
-    "description": "",
-    "type": [""],
-    "collaboration": [""],
-    "capacity": [""],
-    "risk": [""]
+    "description": "Store sensitive data in encrypted files on OneDrive.",
+    "type": ["Active Research", "Backup"],
+    "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"],
+    "capacity": ["Under 1 TB"],
+    "risk": ["Medium", "High"]
   },
   {
     "name": "Microsoft SharePoint (Institutional)",
     "description": "Communication and document storage for large groups.",
-    "type": [""],
-    "collaboration": [""],
-    "capacity": [""],
-    "risk": [""]
+    "type": ["Active Research", "Backup"],
+    "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent"],
+    "capacity": ["Under 1 TB", "1 - 5 TB"],
+    "risk": ["Low", "Medium"]
   },
   {
     "name": "Microsoft Teams (institutional)",
     "description": "Create a group space for your research team.",
-    "type": [""],
-    "collaboration": [""],
-    "capacity": [""],
-    "risk": [""]
+    "type": ["Active Research", "Backup"],
+    "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link"],
+    "capacity": ["Under 1 TB"],
+    "risk": ["Low"]
   },
   {
     "name": "Open Science Framework (OSF)",
     "description": "Open platform for collaborative research.",
-    "type": [""],
-    "collaboration": [""],
-    "capacity": [""],
-    "risk": [""]
+    "type": ["Active Research", "Archival & Open Data Sharing"],
+    "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"],
+    "capacity": ["Under 1 TB"],
+    "risk": ["Low"]
   },
   {
     "name": "Stage2Data",
     "description": "Canadian sovereign cloud storage and backups.",
-    "type": [""],
-    "collaboration": [""],
-    "capacity": [""],
+    "type": ["Active Research", "Backup"],
+    "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent"],
+    "capacity": ["Under 1 TB", "1 - 5 TB", "Over 5 TB"],
     "risk": ["Low", "Medium", "High"]
   }
 ]
