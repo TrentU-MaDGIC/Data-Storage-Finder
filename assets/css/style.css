@@ -22,6 +22,7 @@ main {
   background: white;
   padding: 1rem;
   border-radius: 8px;
+  align-self: flex-start;
 }
 
 .filter-section {
