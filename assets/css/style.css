@@ -21,6 +21,9 @@ main {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  position: sticky;
+  top: 1.5rem;
+
 }
 .contact-box {
   background: #e8f5e9; /* light green */
