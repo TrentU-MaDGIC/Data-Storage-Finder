@@ -23,7 +23,7 @@ main {
   gap: 1.5rem;
   position: sticky;
   top: 1.5rem;
-
+  align-self: flex-start;
 }
 .contact-box {
   background: #e8f5e9; /* light green */
@@ -46,6 +46,12 @@ main {
 .contact-box a:hover {
   text-decoration: underline;
 }
+
+.filters,
+.contact-box {
+  width: 100%;
+}
+
 .filters {
   width: 30%;
   background: white;
