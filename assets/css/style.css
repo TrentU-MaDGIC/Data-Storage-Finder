@@ -26,10 +26,9 @@ main {
   align-self: flex-start;
 }
 .contact-box {
-  background: #e8f5e9; /* light green */
+  background: #f9f9f9;
   padding: 1rem;
   border-radius: 8px;
-  border: 1px solid #c8e6c9;
   text-align: left;
 }
 
