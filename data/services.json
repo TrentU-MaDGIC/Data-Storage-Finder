@@ -40,7 +40,7 @@
     "risk": ["Low"]
   },
   {
-    "name": "Trent based custom solution",
+    "name": "Custom solution",
     "description": "Contact us for help with complex projects.",
     "type": ["Active Research", "Backup", "Archival & Open Data Sharing"],
     "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"],
