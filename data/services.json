@@ -58,6 +58,7 @@
   {
     "name": "Microsoft OneDrive (institutional) with Encrypted Data",
     "description": "Store sensitive data in encrypted files on OneDrive.",
+    "bestfor": "Individual cloud storage and projects. Collaboration is possible through sharing links. Cleared for storing sensitive data with encryption.",
     "type": ["Active Research", "Backup"],
     "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"],
     "capacity": ["Under 1 TB"],
