@@ -5,6 +5,11 @@
     "options": ["Low", "Medium", "High"]
   },
   {
+    "id": "cost",
+    "question": "What is the cost of storage?",
+    "options": ["Free", "Paid"]
+  },
+  {
     "id": "type",
     "question": "What type of data storage are you looking for?",
     "options": ["Active Research", "Backup", "Archival & Open Data Sharing"]
