@@ -75,6 +75,7 @@ function renderServices(services) {
     card.innerHTML = `
       <h2>${s.name}</h2>
       <p>${s.description}</p>
+      <p><strong>Best For: <strong>${s.bestfor}</p>
       <p><strong>Capacity: </strong>${s.capacity.join(', ')}</p>
       <p><strong>Risk: </strong>${s.risk.join(', ')}</p>
       <p><strong>Type: </strong>${s.type.join(', ')}</p>
