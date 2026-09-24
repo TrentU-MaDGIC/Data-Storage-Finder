@@ -77,7 +77,8 @@ card.innerHTML = `
   <p>${s.description}</p>
   <p><strong>Best For: </strong>${s.best_for || 'N/A'}</p>
   <p><strong>Capacity: </strong>${s.capacity?.join(', ') || 'N/A'}</p>
-  <p><strong>Cost: </strong>${s.cost?.join(', ') || 'N/A'}</p> <p> ${s.cost_desc}</p>
+  <p><strong>Cost: </strong>${s.cost?.join(', ') || 'N/A'}</p> 
+  <p> ${s.cost_desc}</p>
   <p><strong>Risk: </strong>${s.risk?.join(', ') || 'N/A'}</p>
   <p><strong>Type: </strong>${s.type?.join(', ') || 'N/A'}</p>
   <p><strong>Collaboration: </strong>${s.collaboration?.join(', ') || 'N/A'}</p>
