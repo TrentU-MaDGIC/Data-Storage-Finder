@@ -72,15 +72,15 @@ function renderServices(services) {
     const card = document.createElement("div");
     card.className = "service-card";
 
-    card.innerHTML = `
-      <h2>${s.name}</h2>
-      <p>${s.description}</p>
-      <p><strong>Best For: </strong>${s.best_for}</p>
-      <p><strong>Capacity: </strong>${s.capacity.join(', ')}</p>
-      <p><strong>Risk: </strong>${s.risk.join(', ')}</p>
-      <p><strong>Type: </strong>${s.type.join(', ')}</p>
-      <p><strong>Collaboration: </strong>${s.collaboration.join(', ')}</p>
-    `;
+card.innerHTML = `
+  <h2>${s.name}</h2>
+  <p>${s.description}</p>
+  <p><strong>Best For: </strong>${s.best_for || 'N/A'}</p>
+  <p><strong>Capacity: </strong>${s.capacity?.join(', ') || 'N/A'}</p>
+  <p><strong>Risk: </strong>${s.risk?.join(', ') || 'N/A'}</p>
+  <p><strong>Type: </strong>${s.type?.join(', ') || 'N/A'}</p>
+  <p><strong>Collaboration: </strong>${s.collaboration?.join(', ') || 'N/A'}</p>
+`;
 
     container.appendChild(card);
   });
