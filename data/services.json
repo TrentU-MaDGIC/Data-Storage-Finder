@@ -1,43 +1,43 @@
 [
   {
     "name": "Alliance Advanced Research Computing",
-    "description": "Research computing, storage, and software from the Digital Research Alliance of Canada.",
+    "description": "The Digital Research Alliance of Canada partners with SHARCNET in Ontario to provide researchers access to high performance computing and large amounts of storage.",
+    "best_for": "Any project that requires processing power or storage beyond that of a desktop computer. See the Alliance page on storage quotas and policies for details.",
     "type": ["Active Research", "Backup"],
     "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent"],
     "capacity": ["Under 1 TB", "1 - 5 TB", "Over 5 TB"],
-    "risk": ["Low"]
+    "risk": ["Low"],
+    "cost": ["Free"], "cost_desc": "Free for faculty at member institutions (including Trent). Faculty can sponsor accounts for students, research staff, etc."
   },
   {
     "name": "Alliance NextCloud",
-    "description": "Cloud storage from the Digital Research Alliance of Canada.",
+    "description": "An online file syncing and storage solution (like OneDrive or Dropbox) for all Alliance Advanced Research Computing users. Intended for users with relatively small datasets.",
+    "best_for": "Researchers using the Alliance research computing systems to analyze small datasets. Helpful for sharing files from Alliance systems with collaborators who do not have Alliance accounts.",
     "type": ["Active Research", "Backup"],
     "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent"],
     "capacity": ["Under 1 TB"],
-    "risk": ["Low"]
+    "risk": ["Low"],
+    "cost": ["Free"], "cost_desc": "Free for faculty at member institutions (including Trent). Faculty can sponsor accounts for students, research staff, etc."
   },
   {
     "name": "Federated Research Data Repository (FRDR)",
-    "description": "Publish and preserve Canadian Research Data.",
+    "description": "A curated national data repository that can ingest datasets of any size. Guaranteed data preservation for a minimum of 10 years.",
+    "best_for": "Depositing larger data sets for long-term preservation after a project is completed. FRDR was designed to provide a repository for all Canadian researchers. Not cleared for sensitive data; all data deposited to FRDR is publicly available. Deposits can be embargoed for up to 1 year.",
     "type": ["Archival & Open Data Sharing"],
     "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"],
     "capacity": ["Under 1 TB", "1 - 5 TB", "Over 5 TB"],
-    "risk": ["Low"]
+    "risk": ["Low"],
+    "cost": ["Free"], "cost_desc": "Free for faculty members at institutions eligible to receive Tri-Agency funding. Faculty can sponsor accounts for students, research staff, etc."
   },
   {
-    "name": "Github",
-    "description": "Distributed version control system for software code.",
-    "type": ["Active Research", "Backup", "Archival & Open Data Sharing"],
-    "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Public"],
-    "capacity": ["Under 1 TB"],
-    "risk": ["Low"]
-  },
-  {
-    "name": "Trent Dataverse",
-    "description": "Store, share, publish and discover research data!",
+    "name": "Trent Dataverse Collection",
+    "description": "A collection within Borealis, the Canadian Dataverse Repository. This is Trent's institutional data repository. It provides persistent identifiers, secure access controls, licensing, version management, data citation, and more.",
+    "best_for": "Depositing data for sharing, reuse, or preservation after a project is complete. Not cleared for sensitive data; must be de-identified prior to upload. Equipped to support journal requirements for publication.",
     "type": ["Active Research", "Backup", "Archival & Open Data Sharing"],
     "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"],
-    "capacity": ["Under 1 TB"],
-    "risk": ["Low"]
+    "capacity": ["Under 1 TB", "1 - 5 TB"],
+    "risk": ["Low"],
+    "cost": ["Free"], "cost_desc": "Free for Trent students, faculty, and staff"
   },
   {
     "name": "Custom solution",
@@ -55,7 +55,7 @@
     "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"],
     "capacity": ["Under 1 TB"],
     "risk": ["Low"],
-    "cost": ["Free"], "cost_desc": "Free for Trent students, faculty and staff"
+    "cost": ["Free"], "cost_desc": "Free for Trent students, faculty, and staff"
   },
   {
     "name": "Microsoft SharePoint (Institutional)",
@@ -64,30 +64,37 @@
     "type": ["Active Research", "Backup"],
     "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent"],
     "capacity": ["Under 1 TB", "1 - 5 TB"],
-    "risk": ["Low", "Medium"]
+    "risk": ["Low", "Medium"],
+    "cost": ["Free"], "cost_desc": "Free for Trent faculty and staff"
   },
   {
-    "name": "Microsoft Teams (institutional)",
-    "description": "Create a group space for your research team.",
+    "name": "Microsoft Teams (Institutional)",
+    "description": "A unified system that integrates communication (chats, calls, meetings) with file management. Allows you to share files among collaborators.",
+    "best_for": "Team collaboration and group management. Not recommended for sensitive data.",
     "type": ["Active Research", "Backup"],
     "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link"],
     "capacity": ["Under 1 TB"],
-    "risk": ["Low"]
+    "risk": ["Low"],
+    "cost": ["Free"], "cost_desc": "Free for Trent students, faculty, and staff"
   },
   {
-    "name": "Open Science Framework (OSF)",
-    "description": "Open platform for collaborative research.",
+    "name": "sync.com",
+    "description": "A Canadian cloud-based storage tool similar to OneDrive and Dropbox.",
+    "best_for": "Sensitive and non-sensitive data storage during active research phases; guarantees data sovereignty.",
     "type": ["Active Research", "Archival & Open Data Sharing"],
     "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"],
-    "capacity": ["Under 1 TB"],
-    "risk": ["Low"]
+    "capacity": ["Under 1 TB", "1 - 5 TB", "Over 5 TB"],
+    "risk": ["Low"],
+    "cost": ["Paid"], "cost_desc": "$100 per person per year for 1 TB"
   },
   {
     "name": "Stage2Data",
-    "description": "Canadian sovereign cloud storage and backups.",
+    "description": "A cloud storage and cybersecurity company based in Oakville, Ontario. Stage2Data stores and protect data at a monthly cost in support of Canadian data sovereignty. Storage can be accessed as a virtual machine (VM), object storage, or cloud storage.",
+    "best_for": "Storing large amounts of sensitive data during active research phases; guarantees data sovereignty.",
     "type": ["Active Research", "Backup"],
     "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent"],
     "capacity": ["Under 1 TB", "1 - 5 TB", "Over 5 TB"],
-    "risk": ["Low", "Medium", "High"]
+    "risk": ["Low", "Medium", "High"],
+    "cost": ["Paid"], "cost_desc": "$1000 one-time setup fee plus $10/month per TB"
   }
 ]
