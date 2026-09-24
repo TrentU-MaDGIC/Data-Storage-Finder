@@ -48,25 +48,19 @@
     "risk": ["Low", "Medium", "High"]
   },
   {
-    "name": "Microsoft OneDrive (institutional)",
+    "name": "Microsoft OneDrive (Institutional)",
     "description": "A file hosting and synchronization service managed by Information Technology Services as part of Trent's Microsoft 365 license.",
-    "type": ["Active Research", "Backup"],
-    "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"],
-    "capacity": ["Under 1 TB"],
-    "risk": ["Low"]
-  },
-  {
-    "name": "Microsoft OneDrive (institutional) with Encrypted Data",
-    "description": "Store sensitive data in encrypted files on OneDrive.",
     "best_for": "Individual cloud storage and projects. Collaboration is possible through sharing links. Cleared for storing sensitive data with encryption.",
     "type": ["Active Research", "Backup"],
     "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"],
     "capacity": ["Under 1 TB"],
-    "risk": ["Medium", "High"]
+    "risk": ["Low"],
+    "cost": ["Free"], "cost_desc": "Free for Trent students, faculty and staff"
   },
   {
     "name": "Microsoft SharePoint (Institutional)",
-    "description": "Communication and document storage for large groups.",
+    "description": "A web-based collaborative platform for communication and storage. Flexible to support research needs.",
+    "best_for": "Team collaboration and group management. Set up a site for your group and provide members with ownership or access. Not recommended for sensitive data.",
     "type": ["Active Research", "Backup"],
     "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent"],
     "capacity": ["Under 1 TB", "1 - 5 TB"],
