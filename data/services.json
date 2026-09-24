@@ -49,7 +49,7 @@
   },
   {
     "name": "Microsoft OneDrive (institutional)",
-    "description": "Save all your work and files to OneDrive and get them from any device, anywhere.",
+    "description": "A file hosting and synchronization service managed by Information Technology Services as part of Trent's Microsoft 365 license.",
     "type": ["Active Research", "Backup"],
     "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"],
     "capacity": ["Under 1 TB"],
