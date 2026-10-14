@@ -84,7 +84,7 @@
     "type": ["Active Research", "Archival & Open Data Sharing"],
     "collaboration": ["Other Trent Researchers", "Specific Researchers External to Trent", "Non-Specific Individuals with a Shared Link", "Public"],
     "capacity": ["Under 1 TB", "1 - 5 TB", "Over 5 TB"],
-    "risk": ["Low"],
+    "risk": ["Low", "Medium", "High"],
     "cost": ["Paid"], "cost_desc": "$100 per person per year for 1 TB"
   },
   {
